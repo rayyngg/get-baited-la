@@ -1,8 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles.css'
 import PracticeSession from './PracticeSession'
-import { emails } from './emails'
+import SavedSessions from './SavedSessions'
+import SessionSummary from './SessionSummary'
+import { sessions } from './sessions'
+import { EMAILS_PER_SESSION } from './sessionUtils'
+import { appendRecord, completedRecord, hasUnseenSession, loadHistory, nextSession, saveHistory, sessionDate } from './sessionHistory'
 
 function Icon({ name, size = 20, ...props }) {
   const paths = {
@@ -118,6 +122,12 @@ function TipsSection() {
 function App() {
   const [view, setView] = useState('home')
   const [showHow, setShowHow] = useState(false)
+  const [storedHistory] = useState(loadHistory)
+  const [records, setRecords] = useState(storedHistory.records)
+  const [historyWarning, setHistoryWarning] = useState(storedHistory.warning)
+  const [saveState, setSaveState] = useState('saved')
+  const [run, setRun] = useState(null)
+  const [selectedRecordId, setSelectedRecordId] = useState(null)
   const dialogRef = useRef(null)
   const headingRef = useRef(null)
   const hasNavigated = useRef(false)
@@ -130,7 +140,14 @@ function App() {
   useEffect(() => {
     if (hasNavigated.current) headingRef.current?.focus({ preventScroll: true })
     hasNavigated.current = true
-  }, [view])
+  }, [view, run?.id, selectedRecordId])
+
+  useEffect(() => {
+    if (!records.length) return
+    const saved = saveHistory(records)
+    setSaveState(saved ? 'saved' : 'failed')
+    setHistoryWarning(saved ? '' : 'Your latest result could not be saved. Keep this page open and try saving again.')
+  }, [records])
 
   function navigateTo(nextView) {
     setView(nextView)
@@ -138,18 +155,41 @@ function App() {
     window.scrollTo({ top: 0, behavior: reducedMotion ? 'instant' : 'smooth' })
   }
 
-  function startSession() { if (view !== 'session') navigateTo('session') }
+  function startSession() {
+    setRun({
+      id: crypto.randomUUID(), number: Math.max(0, ...records.map(record => record.number)) + 1,
+      startedAt: new Date().toISOString(), definition: nextSession(sessions, records),
+    })
+    navigateTo('session')
+  }
   function goHome() { navigateTo('home') }
+  function openHistory() { navigateTo('history') }
+  function viewResult(id) {
+    setSelectedRecordId(id)
+    navigateTo('result')
+  }
+  const recordResult = useCallback((finishedRun, answers) => {
+    const record = completedRecord(finishedRun, answers)
+    setSaveState('saving')
+    setRecords(current => appendRecord(current, record))
+  }, [])
+  function retrySave() {
+    const saved = saveHistory(records)
+    setSaveState(saved ? 'saved' : 'failed')
+    if (saved) setHistoryWarning('')
+  }
+  const hasFreshEmails = hasUnseenSession(sessions, records)
+  const selectedRecord = records.find(record => record.id === selectedRecordId)
 
   return <div className="app-shell">
     <aside className="sidebar">
       <button className="brand" onClick={goHome} aria-label="Get Baited La home"><Logo/><span>get <span className="brand-baited">baited</span><span className="brand-la"> la.</span></span></button>
-      <div className="sidebar-main"><span className="nav-label">YOUR SPACE</span><nav aria-label="Main navigation"><button className={`nav-item ${view === 'home' ? 'active' : ''}`} onClick={goHome} aria-current={view === 'home' ? 'page' : undefined}><Icon name="home"/>Home<span className="active-dot"/></button><button className={`nav-item ${view === 'session' ? 'active' : ''}`} onClick={startSession} aria-current={view === 'session' ? 'page' : undefined}><Icon name="shield"/>Practice session</button></nav></div>
+      <div className="sidebar-main"><span className="nav-label">YOUR SPACE</span><nav aria-label="Main navigation"><button className={`nav-item ${view === 'home' ? 'active' : ''}`} onClick={goHome} aria-current={view === 'home' ? 'page' : undefined}><Icon name="home"/>Home<span className="active-dot"/></button><button className={`nav-item ${view === 'history' || view === 'result' ? 'active' : ''}`} onClick={openHistory} aria-current={view === 'history' ? 'page' : undefined}><Icon name="book"/>Saved sessions</button></nav></div>
       <div className="sidebar-footer"><span className="status-dot"/>Your safe space to learn</div>
     </aside>
 
     <div className="main-shell">
-      <header className="topbar"><div className="breadcrumb">Your space<Icon name="chevron" size={13}/><span>{view === 'home' ? 'Home' : 'Practice session'}</span></div><span className="topbar-caption"><Icon name="shield" size={16}/>Think before you click</span></header>
+      <header className="topbar"><div className="breadcrumb">Your space<Icon name="chevron" size={13}/><span>{view === 'home' ? 'Home' : view === 'history' || view === 'result' ? 'Saved sessions' : `Session ${run?.number}`}</span></div><span className="topbar-caption"><Icon name="shield" size={16}/>Think before you click</span></header>
       <main key={view} className="page-transition">
         {view === 'home' ? <>
           <div className="page-heading home-heading">
@@ -163,17 +203,20 @@ function App() {
             <div className="hero-copy">
               <span className="hero-kicker"><span className="tiny-line"/>PHISHING PRACTICE</span>
               <h2 id="hero-title">Spot the scam.<br/><span>Skip the bait.</span></h2>
-              <p>Learn to spot phishing emails in a safe practice inbox.</p>
+              <p>Practise with everyday emails from life in Singapore.</p>
               <button className="primary-button" onClick={startSession}>
                 Start a session<Icon name="arrow" size={19}/>
               </button>
               <div className="hero-meta">
-                <span><Icon name="mail" size={14}/>{emails.length} practice emails</span>
+                <span><Icon name="mail" size={14}/>{EMAILS_PER_SESSION} emails per session</span>
                 <span className="meta-dot">·</span><span>No timer</span>
               </div>
             </div>
             <InboxIllustration/>
           </section>
+
+          {!hasFreshEmails && <p className="repeat-notice">You’ve completed all 60 practice emails. Your next session will repeat an earlier set.</p>}
+          {historyWarning && <p className="storage-warning" role="status">{historyWarning}</p>}
 
           <ol className="practice-flow" aria-label="How practice works">
             <li><span className="flow-number">01</span><span>Read an email</span></li>
@@ -182,11 +225,12 @@ function App() {
           </ol>
 
           <TipsSection/>
-        </> : <PracticeSession Icon={Icon} headingRef={headingRef} goHome={goHome}/>}
+          {records.length > 0 && <section className="home-results" aria-labelledby="home-results-title"><div className="section-heading"><h2 id="home-results-title">Your saved sessions</h2><button className="text-button" onClick={openHistory}>View all<Icon name="arrow" size={17}/></button></div><div className="recent-results">{records.slice(-3).reverse().map(record => <button key={record.id} onClick={() => viewResult(record.id)} aria-label={`View summary for Session ${record.number}`}><span><strong>Session {record.number}</strong><small>{sessionDate(record.completedAt)}</small></span><span>{record.summary.score}/10<Icon name="chevron" size={19}/></span></button>)}</div><p>Results stay in this browser on this device.</p></section>}
+        </> : view === 'history' ? <SavedSessions records={records} Icon={Icon} headingRef={headingRef} startSession={startSession} goHome={goHome} onView={viewResult} warning={historyWarning}/> : view === 'result' && selectedRecord ? <div className="session-content"><button className="back-button text-button" onClick={openHistory}><Icon name="arrow" size={17}/>Saved sessions</button><div className="page-heading session-heading"><div><span className="eyebrow">YOUR SAVED RESULT</span><h1 ref={headingRef} tabIndex={-1}>Session {selectedRecord.number}</h1><p>{sessionDate(selectedRecord.completedAt)}</p></div></div><SessionSummary summary={selectedRecord.summary} Icon={Icon} startNext={startSession} goHome={goHome} saveState={saveState} onRetry={retrySave} hasFreshEmails={hasFreshEmails}/></div> : run && <PracticeSession key={run.id} run={run} Icon={Icon} headingRef={headingRef} goHome={goHome} startNext={startSession} onComplete={recordResult} saveState={saveState} onRetry={retrySave} hasFreshEmails={hasFreshEmails}/>}
         <footer><span>© {new Date().getFullYear()} Get Baited La</span><span>Less bait. More awareness.</span></footer>
       </main>
     </div>
-    <dialog ref={dialogRef} onCancel={() => setShowHow(false)} onClick={event => { if (event.target === dialogRef.current) setShowHow(false) }} aria-labelledby="dialog-title"><button className="dialog-close" aria-label="Close how it works" onClick={() => setShowHow(false)}><Icon name="close"/></button><span className="step-icon blue-tint"><Icon name="shield" size={27}/></span><h2 id="dialog-title">A small practice. A useful habit.</h2><p>Practise with {emails.length} fictional emails, including phishing attempts and safe messages.</p><ol><li>Read the email and its background. Inspect the sender and requested action.</li><li>Choose Phishing or Safe.</li><li>Read the explanation, then select Next email to continue.</li></ol><p>There’s no timer. At the end, see how you did and revisit useful takeaways.</p><button className="primary-button" onClick={() => { setShowHow(false); startSession() }}>Let’s give it a go<Icon name="arrow" size={18}/></button></dialog>
+    <dialog ref={dialogRef} onCancel={() => setShowHow(false)} onClick={event => { if (event.target === dialogRef.current) setShowHow(false) }} aria-labelledby="dialog-title"><button className="dialog-close" aria-label="Close how it works" onClick={() => setShowHow(false)}><Icon name="close"/></button><span className="step-icon blue-tint"><Icon name="shield" size={27}/></span><h2 id="dialog-title">A small practice. A useful habit.</h2><p>Start with 10 mixed emails from everyday life in Singapore.</p><ol><li>Read each email and its background.</li><li>Choose Phishing for a scam, or Safe for a genuine message.</li><li>Read the explanation, then select Next email.</li></ol><p>Finish to save your summary in this browser. Start another session for a different set. There’s no timer.</p><button className="primary-button" onClick={() => { setShowHow(false); startSession() }}>Start a session<Icon name="arrow" size={18}/></button></dialog>
   </div>
 }
 
