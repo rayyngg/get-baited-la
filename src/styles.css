@@ -227,3 +227,86 @@ dialog[open]::backdrop { opacity: 1; }
     scroll-behavior: auto !important;
   }
 }
+
+/* The practice inbox keeps the message, decision and explanation in one flow. */
+.session-content { max-width: 920px; margin: 0 auto; }
+.session-heading { align-items: flex-start; }
+.session-heading h1 { font-size: clamp(23px, 2.5vw, 29px); }
+.session-count { display: inline-flex; align-items: center; gap: 7px; margin-top: 12px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+.session-progress { margin-bottom: 24px; }
+.progress-caption { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+.progress-caption > span:first-child { font-weight: 650; color: var(--ink); }
+.progress-track { height: 5px; background: var(--border); border-radius: 20px; overflow: hidden; }
+.progress-track > div { height: 100%; background: var(--blue); border-radius: inherit; transition: width 320ms var(--ease-out); }
+.email-stage { animation: content-enter 280ms var(--ease-out) both; }
+.email-context { display: flex; gap: 12px; align-items: flex-start; padding: 18px 20px; border: 1px solid var(--border); border-radius: 10px; background: #fff; margin-bottom: 16px; }
+.email-context > svg { color: var(--blue-detail); margin-top: 2px; }
+.email-context p { font-size: 12px; line-height: 1.8; color: var(--muted); margin-top: 6px; }
+.session-content .practice-email { min-height: 355px; }
+.practice-email h2:focus, .session-summary h2:focus, .answer-feedback h2:focus { outline: none; }
+.sender > div { min-width: 0; }
+.sender .reply-address { color: var(--muted); }
+.email-attachment { display: flex; align-items: center; gap: 9px; width: fit-content; max-width: 100%; margin-top: 20px; padding: 10px 13px; background: var(--page); border: 1px solid var(--border); border-radius: 7px; font-size: 11px; overflow-wrap: anywhere; }
+.decision-actions .answer-button { min-width: 124px; padding: 13px 20px; color: var(--ink); font-weight: 600; }
+.answer-button:not(:disabled):hover { border-color: var(--blue); color: var(--blue); box-shadow: 0 3px 12px #2563eb12; }
+.answer-button.chosen { background: var(--blue-soft); border-color: var(--blue); color: var(--blue); }
+.answer-button:disabled:not(.chosen) { opacity: .55; }
+.feedback-slot { min-height: 245px; }
+.feedback-placeholder { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 245px; padding: 24px; border: 1px dashed var(--blue-border); border-radius: 12px; color: var(--blue-detail); }
+.feedback-placeholder p { color: var(--muted); font-size: 12px; line-height: 1.8; }
+.feedback-placeholder span { display: block; color: var(--subtle); font-size: 11px; }
+.answer-feedback { margin: 0; min-height: 245px; }
+.answer-feedback.is-correct { background: #f0f9f5; border-color: #c4e4d6; }
+.is-correct .step-icon { background: #dff1e8; color: #287551; }
+.is-correct .eyebrow { color: #287551; }
+.answer-feedback.is-incorrect { background: #fff9ee; border-color: #ecdcb8; }
+.is-incorrect .step-icon { background: #faedcf; color: #886117; }
+.is-incorrect .eyebrow { color: #886117; }
+.feedback-copy { min-width: 0; }
+.answer-feedback h2 { font-size: 18px; line-height: 1.5; }
+.answer-feedback p { line-height: 1.75; }
+.answer-feedback ul { margin: 8px 0 14px; padding-left: 18px; color: var(--muted); font-size: 12px; line-height: 1.8; }
+.answer-feedback li + li { margin-top: 5px; }
+.answer-feedback .feedback-takeaway { padding-top: 12px; margin-bottom: 0; border-top: 1px solid #20344c12; }
+.next-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 20px; }
+.next-row > span { color: var(--subtle); font-size: 11px; }
+.primary-button:disabled { opacity: .45; box-shadow: none; transform: none; }
+.primary-button:disabled:hover { background: var(--blue); }
+.session-summary { display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid var(--blue-border); background: white; border-radius: 14px; padding: 38px; animation: content-enter 280ms var(--ease-out) both; }
+.summary-icon { display: grid; place-items: center; width: 64px; height: 64px; background: var(--blue-soft); color: var(--blue); border-radius: 18px; margin-bottom: 22px; }
+.session-summary > h2 { font-family: 'Manrope', sans-serif; font-size: 25px; margin-top: 12px; line-height: 1.5; }
+.session-summary > p { font-size: 13px; line-height: 1.85; max-width: 560px; color: var(--muted); margin-top: 14px; }
+.summary-actions { display: flex; justify-content: center; gap: 12px; margin-top: 28px; }
+.review-list { width: 100%; margin-top: 28px; text-align: left; border-top: 1px solid var(--border); padding-top: 22px; }
+.review-list > h3 { font-size: 13px; margin-bottom: 15px; }
+.review-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; }
+.review-item + .review-item { border-top: 1px solid var(--border); }
+.review-item h4 { font-size: 12px; line-height: 1.7; margin: 0; }
+.review-item p { color: var(--muted); font-size: 12px; line-height: 1.8; margin-top: 5px; }
+.verdict-label { display: inline-block; border-radius: 5px; font-size: 10px; font-weight: 600; padding: 5px 8px; min-width: 61px; text-align: center; }
+.verdict-label.safe { background: #e8f6ee; color: #287551; }
+.verdict-label.phishing { background: #fff2d9; color: #886117; }
+
+@media (max-width: 640px) {
+  .session-heading { flex-direction: column; gap: 10px; }
+  .session-count { margin: 0; font-size: 10px; }
+  .session-heading p { line-height: 1.7; }
+  .session-content .practice-email { min-height: 390px; }
+  .email-context { padding: 16px; gap: 10px; }
+  .email-context p { font-size: 11px; }
+  .session-content .decision-actions { flex-direction: row; }
+  .decision-actions .answer-button { flex: 1; min-width: 0; }
+  .feedback-slot, .feedback-placeholder { min-height: 330px; }
+  .answer-feedback { min-height: 330px; }
+  .answer-feedback .step-icon { width: 29px; height: 29px; border-radius: 8px; }
+  .answer-feedback .step-icon svg { width: 19px; height: 19px; }
+  .answer-feedback { padding: 18px 14px; gap: 10px; }
+  .answer-feedback h2 { font-size: 16px; }
+  .answer-feedback ul { font-size: 11px; }
+  .next-row { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .next-row .primary-button { width: 100%; }
+  .session-summary { padding: 28px 20px; }
+  .session-summary > h2 { font-size: 21px; }
+  .summary-actions { width: 100%; flex-direction: column; }
+  .review-item { gap: 9px; }
+}

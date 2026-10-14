@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles.css'
+import PracticeSession from './PracticeSession'
+import { emails } from './emails'
 
 function Icon({ name, size = 20, ...props }) {
   const paths = {
@@ -115,7 +117,6 @@ function TipsSection() {
 
 function App() {
   const [view, setView] = useState('home')
-  const [answer, setAnswer] = useState(null)
   const [showHow, setShowHow] = useState(false)
   const dialogRef = useRef(null)
   const headingRef = useRef(null)
@@ -132,13 +133,12 @@ function App() {
   }, [view])
 
   function navigateTo(nextView) {
-    setAnswer(null)
     setView(nextView)
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     window.scrollTo({ top: 0, behavior: reducedMotion ? 'instant' : 'smooth' })
   }
 
-  function startSession() { navigateTo('session') }
+  function startSession() { if (view !== 'session') navigateTo('session') }
   function goHome() { navigateTo('home') }
 
   return <div className="app-shell">
@@ -168,7 +168,7 @@ function App() {
                 Start a session<Icon name="arrow" size={19}/>
               </button>
               <div className="hero-meta">
-                <span><Icon name="mail" size={14}/>1 practice email</span>
+                <span><Icon name="mail" size={14}/>{emails.length} practice emails</span>
                 <span className="meta-dot">·</span><span>No timer</span>
               </div>
             </div>
@@ -182,17 +182,11 @@ function App() {
           </ol>
 
           <TipsSection/>
-        </> : <>
-          <button className="back-button text-button" onClick={goHome}><Icon name="arrow" size={17}/>Back to home</button>
-          <div className="page-heading session-heading"><div><div className="eyebrow">YOUR FIRST PRACTICE</div><h1 ref={headingRef} tabIndex={-1}>Something looks fishy.</h1><p>Take your time. Read the email and make your call.</p></div><span className="home-pill">1 practice email</span></div>
-          <section className="practice-card" aria-label="Simulated email"><div className="practice-toolbar"><span><Icon name="mail" size={18}/>Practice inbox</span><span className="simulation-label">SIMULATION</span></div><div className="practice-email"><h2>Action required: Your account will be suspended</h2><div className="sender"><span className="email-avatar blue-tint">S</span><div><strong>Streamly Support</strong><span>security@streamly-account-check.example</span></div><span className="email-time">9:41 AM</span></div><div className="email-body"><p>Hello customer,</p><p>We could not verify your payment details. Your Streamly account will be suspended in 2 hours unless you confirm your information.</p><p>Verify your account immediately to keep access to your favourite shows.</p><span className="fake-email-link">Verify my account <Icon name="link" size={14}/></span><p className="destination">Link destination: streamly-verify.example/billing</p><p>Thank you,<br/>Streamly Account Team</p></div></div></section>
-          {!answer ? <section className="decision"><div><h2>Would you trust this email?</h2><p>Look at the sender, the link, and the language.</p></div><div className="decision-actions"><button className="secondary-button" onClick={() => setAnswer('legitimate')}><Icon name="check" size={18}/>Looks legitimate</button><button className="primary-button" onClick={() => setAnswer('phishing')}><Icon name="flag" size={18}/>Looks like phishing</button></div></section> : <section className="feedback" role="status"><span className="step-icon blue-tint"><Icon name="shield" size={25}/></span><div><span className="eyebrow">PRACTICE COMPLETE</span><h2>{answer === 'phishing' ? 'Good catch. That’s the bait.' : 'This one was phishing. Here’s what to look for.'}</h2><p>The unrelated sender domain, a different link destination, and the two-hour deadline are warning signs. Open the service’s website yourself to check your account.</p><button className="text-button" onClick={goHome}>Back to home<Icon name="arrow" size={17}/></button></div></section>}
-          <div className="simulation-note"><Icon name="shield" size={15}/>This is a fictional email. Its example links are inactive and no information is collected.</div>
-        </>}
+        </> : <PracticeSession Icon={Icon} headingRef={headingRef} goHome={goHome}/>}
         <footer><span>© {new Date().getFullYear()} Get Baited La</span><span>Less bait. More awareness.</span></footer>
       </main>
     </div>
-    <dialog ref={dialogRef} onCancel={() => setShowHow(false)} onClick={event => { if (event.target === dialogRef.current) setShowHow(false) }} aria-labelledby="dialog-title"><button className="dialog-close" aria-label="Close how it works" onClick={() => setShowHow(false)}><Icon name="close"/></button><span className="step-icon blue-tint"><Icon name="shield" size={27}/></span><h2 id="dialog-title">A small practice. A useful habit.</h2><p>This first version includes one fictional email to help you get started.</p><ol><li>Read the email and inspect its sender and link.</li><li>Decide whether it looks legitimate or like phishing.</li><li>Get feedback explaining the warning signs.</li></ol><p>There’s no timer or score. Take all the time you need.</p><button className="primary-button" onClick={() => { setShowHow(false); startSession() }}>Let’s give it a go<Icon name="arrow" size={18}/></button></dialog>
+    <dialog ref={dialogRef} onCancel={() => setShowHow(false)} onClick={event => { if (event.target === dialogRef.current) setShowHow(false) }} aria-labelledby="dialog-title"><button className="dialog-close" aria-label="Close how it works" onClick={() => setShowHow(false)}><Icon name="close"/></button><span className="step-icon blue-tint"><Icon name="shield" size={27}/></span><h2 id="dialog-title">A small practice. A useful habit.</h2><p>Practise with {emails.length} fictional emails, including phishing attempts and safe messages.</p><ol><li>Read the email and its background. Inspect the sender and requested action.</li><li>Choose Phishing or Safe.</li><li>Read the explanation, then select Next email to continue.</li></ol><p>There’s no timer. At the end, see how you did and revisit useful takeaways.</p><button className="primary-button" onClick={() => { setShowHow(false); startSession() }}>Let’s give it a go<Icon name="arrow" size={18}/></button></dialog>
   </div>
 }
 
